@@ -1109,7 +1109,7 @@ class OpenBBFigure(go.Figure):
         if kwargs.pop("margin", True):
             self._adjust_margins()
 
-        self._apply_feature_flags()
+        # self._apply_feature_flags()
         if kwargs.pop("date_xaxis", True):
             self.add_rangebreaks()
             self._xaxis_tickformatstops()
@@ -1438,7 +1438,7 @@ class OpenBBFigure(go.Figure):
                 full_html=False,
             )
         )
-        self._apply_feature_flags()
+        # self._apply_feature_flags()
         self._xaxis_tickformatstops()
 
         if not plots_backend().isatty and self.data[0].type != "table":
