@@ -352,8 +352,8 @@ class TerminalStyle:
     ):
         """Show chart in an interactive widget."""
 
-        self.add_cmd_source(plt.gcf())
-        self.add_label(plt.gcf())
+        # self.add_cmd_source(plt.gcf())
+        # self.add_label(plt.gcf())
 
         if force_tight_layout:
             plt.tight_layout(pad=self.tight_layout_padding)
