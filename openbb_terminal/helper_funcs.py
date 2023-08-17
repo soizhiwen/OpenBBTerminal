@@ -278,6 +278,7 @@ def print_rich_table(
     print_to_console: bool = False,
     limit: Optional[int] = 1000,
     source: Optional[str] = None,
+    columns_keep_types: Optional[List[str]] = None,
 ):
     """Prepare a table from df in rich.
 
@@ -313,6 +314,8 @@ def print_rich_table(
         console.
     source: Optional[str]
         Source of the table. If provided, it will be displayed in the header of the table.
+    columns_keep_types: Optional[List[str]]
+        Columns to keep their types, i.e. not convert to numeric
     """
     if export:
         return
@@ -329,6 +332,8 @@ def print_rich_table(
     #  convert non-str that are not timestamp or int into str
     # eg) praw.models.reddit.subreddit.Subreddit
     for col in df.columns:
+        if columns_keep_types is not None and col in columns_keep_types:
+            continue
         try:
             if not any(
                 isinstance(df[col].iloc[x], pd.Timestamp)
@@ -2073,7 +2078,7 @@ def check_start_less_than_end(start_date: str, end_date: str) -> bool:
 
 # Write an abstract helper to make requests from a url with potential headers and params
 def request(
-    url: str, method: str = "GET", timeout: int = 0, **kwargs
+    url: str, method: str = "get", timeout: int = 0, **kwargs
 ) -> requests.Response:
     """Abstract helper to make requests from a url with potential headers and params.
 
@@ -2081,8 +2086,11 @@ def request(
     ----------
     url : str
         Url to make the request to
-    method : str, optional
-        HTTP method to use.  Can be "GET" or "POST", by default "GET"
+    method : str
+        HTTP method to use.  Choose from:
+        delete, get, head, patch, post, put, by default "get"
+    timeout : int
+        How many seconds to wait for the server to send data
 
     Returns
     -------
@@ -2094,6 +2102,9 @@ def request(
     ValueError
         If invalid method is passed
     """
+    method = method.lower()
+    if method not in ["delete", "get", "head", "patch", "post", "put"]:
+        raise ValueError(f"Invalid method: {method}")
     current_user = get_current_user()
     # We want to add a user agent to the request, so check if there are any headers
     # If there are headers, check if there is a user agent, if not add one.
@@ -2103,21 +2114,13 @@ def request(
 
     if "User-Agent" not in headers:
         headers["User-Agent"] = get_user_agent()
-    if method.upper() == "GET":
-        return requests.get(
-            url,
-            headers=headers,
-            timeout=timeout,
-            **kwargs,
-        )
-    if method.upper() == "POST":
-        return requests.post(
-            url,
-            headers=headers,
-            timeout=timeout,
-            **kwargs,
-        )
-    raise ValueError("Method must be GET or POST")
+    func = getattr(requests, method)
+    return func(
+        url,
+        headers=headers,
+        timeout=timeout,
+        **kwargs,
+    )
 
 
 def remove_timezone_from_dataframe(df: pd.DataFrame) -> pd.DataFrame:
